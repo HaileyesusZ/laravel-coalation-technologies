@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProductPostRequest;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
@@ -45,14 +47,17 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ProductPostRequest $request)
     {
         try {
+            Log::info('Adding a new product', ['product', $request->all()]);
             $this->createDBFile();
             $products_database = Storage::get($this->db_file_path);
             $products = json_decode($products_database, true);
 
-            $new_product = $request->validatedTransformed()->only(['name', 'quantity', 'price']);
+            $new_product = $request->validatedTransformed()->only(['id', 'name', 'quantity', 'price', 'createdAt']);
+
+            Log::info('New product to add', ['new product' => $new_product]);
             array_push($products, $new_product);
             $new_products = json_encode($products);
             Storage::put($this->db_file_path, $new_products);

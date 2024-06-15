@@ -41,15 +41,21 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <th scope="row">1</th>
-                            <td scope="row">Product #1</td>
-                            <td scope="row">29</td>
-                            <td scope="row">12.45</td>
-                            <td scope="row">361.05</td>
-                            <td scope="row">12.45</td>
-                            <td scope="row"><button class="btn btn-link p-0 "> Edit </button></td>
-                        </tr>
+                        @if (is_array($products))
+
+                            @foreach ($products as $product)
+                                <tr>
+                                    <th scope="row">{{ $loop->index + 1 }}</th>
+                                    <td scope="row">{{ $product['name'] }}</td>
+                                    <td scope="row">{{ $product['quantity'] }} </td>
+                                    <td scope="row">{{ $product['price'] }}</td>
+                                    <td scope="row">{{ floatval($product['price']) * $product['quantity'] }}</td>
+                                    <td scope="row">{{ date('Y-m-d h:i:s a', strtotime($product['createdAt'])) }}</td>
+                                    <td scope="row"><button class="btn btn-link p-0 "> Edit </button></td>
+                                </tr>
+                            @endforeach
+                        @endif
+
                     </tbody>
                 </table>
             </div>
