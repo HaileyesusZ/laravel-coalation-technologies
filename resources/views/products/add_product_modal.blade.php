@@ -7,7 +7,7 @@
             </div>
             <div class="modal-body">
 
-                <form id="add-product-form">
+                <form id="add-product-form" method="POST">
                     @csrf
                     <div class="mb-3">
                         <label for="name" class="form-label">Name of the product</label>

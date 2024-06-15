@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProductPostRequest;
+use App\Http\Requests\ProductPutRequest;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -11,7 +12,6 @@ use Illuminate\Support\Facades\Storage;
 class ProductController extends Controller
 {
     private $db_file_path = 'product/products.json';
-
 
     private function createDBFile()
     {
@@ -29,19 +29,18 @@ class ProductController extends Controller
             $products_database = Storage::get($this->db_file_path);
             $products = json_decode($products_database, true);
 
+            usort($products, function ($first, $second) {
+                $date1 = strtotime(date($first['createdAt']));
+                $date2 = strtotime(date($second['createdAt']));
+
+                return $date1 > $date2;
+            });
+
             return view('products.index')->with(['products' => $products]);
         } catch (Exception $exception) {
             error_log($exception);
             return response()->json(['message' => 'Error showing a list of products']);
         }
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -74,43 +73,52 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
+        try {
+            $this->createDBFile();
+            $products_database = Storage::get($this->db_file_path);
+            $products = json_decode($products_database, true);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+            $product = current(array_filter($products, function ($product) use ($id) {
+                return $product['id'] === $id;
+            }));
+
+            return view('products.edit_product')->with(['product' => $product]);
+        } catch (Exception $exception) {
+            error_log($exception);
+            return response()->json(['message' => 'Error showing a list of products']);
+        }
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ProductPutRequest $request, string $id)
     {
         try {
 
+            Log::info('Updating a product', ['product' => $request->all()]);
             $this->createDBFile();
-            // get the validated data
-            // get the current list of products from the DB file
-            // get the product to update
-            // update the list of products with the updated product
-            // save the new list of products
-            // redirect to product list view with the new list of products
-        } catch (Exception $exception) {
 
+            $products_database = Storage::get($this->db_file_path);
+            $products = json_decode($products_database, true);
+
+
+            $product = current(array_filter($products, function ($product) use ($id) {
+                return $product['id'] === $id;
+            }));
+            $other_products = array_filter($products, function ($product) use ($id) {
+                return $product['id'] !== $id;
+            });
+            $new_product = array_replace($product, $request->validatedTransformed()->only(['name', 'quantity', 'price']));
+            $updated_products = [...$other_products, $new_product];
+            $updated_products_json = json_encode($updated_products);
+
+            Storage::put($this->db_file_path, $updated_products_json);
+
+            return response()->json(['products' => $updated_products]);
+        } catch (Exception $exception) {
             error_log($exception);
             return response()->json(['message' => 'Error updating a product']);
         }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

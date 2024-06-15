@@ -2,13 +2,11 @@
 
 namespace App\Http\Requests;
 
-use Carbon\Carbon;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Support\Str;
 
-class ProductPostRequest extends FormRequest
+class ProductPutRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -31,7 +29,7 @@ class ProductPostRequest extends FormRequest
         return [
             'name' => 'required|alpha_num',
             'quantity' => 'required|integer',
-            'price' => 'required|numeric'
+            'price' => 'required|numeric',
         ];
     }
 
@@ -41,10 +39,8 @@ class ProductPostRequest extends FormRequest
     public function validatedTransformed()
     {
         return $this->safe()->merge([
-            'id' => Str::uuid(),
             'quantity' => intval($this->quantity),
             'price' =>  number_format(floatval($this->price), 2),
-            'createdAt' => Carbon::now(),
         ]);
     }
 
